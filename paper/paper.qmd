@@ -18,25 +18,23 @@ bibliography: references.bib
 #| warning: false
 #| message: false
 
+# Load necessary libraries
 library(tidyverse)
-library(palmerpenguins)
+library(ggplot2)
+library(here)
+
+# Load the cleaned speed data
+data <- read_csv(here::here("data/02-analysis_data/analysis_speed_data.csv"))
+
+# Ensure the data is ready for analysis
+data <- data %>%
+  mutate(
+    month = as.Date(month)  # Ensure the 'month' column is in Date format
+  )
 ```
 
 
 # Introduction
-
-Overview paragraph
-
-Estimand paragraph
-
-Results paragraph
-
-Why it matters paragraph
-
-Telegraphing paragraph: The remainder of this paper is structured as follows. @sec-data....
-
-
-
 
 
 
@@ -52,47 +50,186 @@ Overview text
 	
 Some paragraphs about how we go from a phenomena in the world to an entry in the dataset.
 
-## Outcome variables
+## Traffic Speed Dataset
 
-Add graphs, tables and text. Use sub-sub-headings for each outcome variable or update the subheading to be singular.
+The traffic speed dataset contains information collected from multiple locations and months, detailing percentile speeds, total traffic volume, and counts of vehicles traveling within specific speed ranges. The dataset aggregates these metrics monthly, offering insights into traffic behavior and variations over time.
 
-
-
-Some of our data is of penguins (@fig-bills), from @palmerpenguins.
+This dataset includes:
+- Percentile speeds (5th, 10th, ... 95th) representing speed thresholds exceeded by corresponding proportions of vehicles.
+- Traffic volume as the total number of vehicles observed monthly.
+- Speed bins (e.g., 0-4 km/h, 5-9 km/h) for detailed breakdowns of vehicle counts across speed ranges.
+- The table below, @tbl-speed-preview, showcases a preview of the cleaned dataset with selected columns to highlight key features.
 
 ```{r}
-#| label: fig-bills
-#| fig-cap: Bills of penguins
+#| label: tbl-speed-preview
+#| tbl-cap: Preview of cleaned traffic speed dataset.
 #| echo: false
+#| tbl-pos: H
 
-ggplot(penguins, aes(x = island, fill = species)) +
-  geom_bar(alpha = 0.8) +
-  scale_fill_manual(values = c("darkorange","purple","cyan4"),
-                    guide = "none") +
-  theme_minimal() +
-  facet_wrap(~species, ncol = 1) +
-  coord_flip()
+data |> 
+  select(month, pct_05, pct_50, pct_95, spd_30, spd_50, spd_100_and_above, volume) |> 
+  head(10) |> 
+  kable(
+    col.names = c("Month", "5th Percentile", "Median (50th Percentile)", "95th Percentile", 
+                  "Vehicles (30-34 km/h)", "Vehicles (50-54 km/h)", "Vehicles (>100 km/h)", "Total Volume"),
+    booktabs = TRUE
+  ) |> 
+  column_spec(1, width = "2.5cm") |> 
+  column_spec(2:8, width = "2.0cm")
+
 ```
 
-Talk more about it.
-
-And also planes (@fig-planes). (You can change the height and width, but don't worry about doing that until you have finished every other aspect of the paper - Quarto will try to make it look nice and the defaults usually work well once you have enough text.)
+## Random Sample from the Dataset
+@tbl-random-sample provides a random sample of 10 observations, offering an unbiased snapshot of key metrics such as speed percentiles, total traffic volume, and counts of vehicles exceeding 100 km/h. This selection illustrates the dataset's diversity without emphasizing specific patterns.
 
 ```{r}
-#| label: fig-planes
-#| fig-cap: Relationship between wing length and width
+#| label: tbl-random-sample
+#| tbl-cap: Random sample of traffic speed dataset.
+#| echo: false
+#| tbl-pos: H
+
+set.seed(304)  # For reproducibility
+data |> 
+  sample_n(10) |> 
+  select(month, pct_05, pct_50, pct_95, volume, spd_100_and_above) |> 
+  kable(
+    col.names = c("Month", "5th Percentile", "Median (50th Percentile)", "95th Percentile", "Total Volume", "Vehicles (>100 km/h)"),
+    booktabs = TRUE
+  ) |> 
+  column_spec(1, width = "2.5cm") |> 
+  column_spec(2:6, width = "2.0cm")
+
+```
+
+## Extreme Speeds Dataset
+Vehicles traveling at extreme speeds (over 100 km/h) represent a critical factor in understanding traffic safety and violations. The table below, @tbl-extreme-speeds, highlights the top 5 months with the highest counts of vehicles exceeding 100 km/h. This provides insights into when extreme speeds are most prevalent.
+
+```{r}
+#| label: tbl-extreme-speeds
+#| tbl-cap: Top 5 months with the highest counts of vehicles exceeding 100 km/h.
+#| echo: false
+#| tbl-pos: H
+
+data |> 
+  arrange(desc(spd_100_and_above)) |> 
+  head(5) |> 
+  select(month, volume, spd_100_and_above, pct_95) |> 
+  kable(
+    col.names = c("Month", "Total Volume", "Vehicles (>100 km/h)", "95th Percentile Speed"),
+    booktabs = TRUE
+  ) |> 
+  column_spec(1, width = "2.5cm") |> 
+  column_spec(2:4, width = "2.0cm")
+
+```
+
+## Proportion of Vehicles at Moderate Speeds
+Another key insight from this dataset is the proportion of vehicles traveling within a moderate speed range (50–70 km/h). This measure helps understand how typical driving speeds align with safe and efficient traffic flow.
+
+The table below, @tbl-speed-proportion, highlights monthly proportions of vehicles in this speed range.
+
+```{r}
+#| label: tbl-speed-proportion
+#| tbl-cap: Monthly proportions of vehicles traveling at moderate speeds (50–70 km/h).
+#| echo: false
+#| tbl-pos: H
+
+moderate_speed <- data %>%
+  mutate(month = lubridate::month(month, label = TRUE, abbr = TRUE)) %>%
+  group_by(month) %>%
+  summarise(
+    moderate_speed_count = sum(spd_50 + spd_55 + spd_60 + spd_65 + spd_70, na.rm = TRUE),
+    total_volume = sum(volume, na.rm = TRUE),
+    proportion_moderate = round((moderate_speed_count / total_volume) * 100, 2)
+  ) 
+
+moderate_speed |> 
+  kable(
+    col.names = c("Month", "Moderate Speed Vehicles", "Total Volume", "Proportion (%)"), 
+    booktabs = TRUE
+  ) |> 
+  column_spec(1, width = "2.5cm") |> 
+  column_spec(2:4, width = "2.5cm")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+#| label: fig-extreme-speeds-vs-volume
+#| fig-cap: Relationship between extreme speeds (over 100 km/h) and total traffic volume, categorized by pre-2020 and post-2020 time periods.
 #| echo: false
 #| warning: false
 #| message: false
 
-analysis_data <- read_csv(here::here("data/02-analysis_data/analysis_data.csv"))
+# Process the data for analysis
+extreme_vs_volume <- data %>%
+  group_by(month) %>%
+  summarise(
+    extreme_count = sum(spd_100_and_above, na.rm = TRUE),
+    total_volume = sum(volume, na.rm = TRUE)
+  ) %>%
+  mutate(period = ifelse(month < as.Date("2020-01-01"), "Pre-2020", "Post-2020"))
 
-analysis_data |> 
-  ggplot(aes(x = width, y = length)) +
-  geom_point(alpha = 0.8) +
-  theme_minimal() +
-  labs(x = "Wing width (mm)",
-       y = "Wing length (mm)")
+# Plot Extreme Speeds vs Total Traffic Volume by Time Period
+ggplot(extreme_vs_volume, aes(x = total_volume, y = extreme_count, color = period)) +
+  geom_point(size = 2, alpha = 0.7) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    x = "Total Traffic Volume",
+    y = "Extreme Speeds (Over 100 km/h)",
+    color = "Time Period"
+  ) +
+  theme_minimal()
+
+
+```
+
+```{r}
+#| label: fig-key-percentiles
+#| fig-cap: Trends in key speed percentiles (5th, 50th, and 95th) and the spread between the 95th and 5th percentiles over time.
+#| echo: false
+#| warning: false
+#| message: false
+# Summarize Key Percentiles and Calculate Speed Spread
+key_percentiles <- data %>%
+  group_by(month) %>%
+  summarise(
+    pct_05 = mean(pct_05, na.rm = TRUE),
+    pct_50 = mean(pct_50, na.rm = TRUE),
+    pct_95 = mean(pct_95, na.rm = TRUE)
+  ) %>%
+  mutate(speed_spread = pct_95 - pct_05)  # Calculate spread
+
+# Plot Key Percentiles and Spread
+ggplot(key_percentiles, aes(x = month)) +
+  geom_line(aes(y = pct_05, color = "5th Percentile")) +
+  geom_line(aes(y = pct_50, color = "Median (50th Percentile)")) +
+  geom_line(aes(y = pct_95, color = "95th Percentile")) +
+  geom_line(aes(y = speed_spread, color = "Speed Spread"), linetype = "dashed") +
+  labs(
+    x = "Month",
+    y = "Speed (km/h)",
+    color = "Legend"
+  ) +
+  theme_minimal()
+
+```
+
+
+```{r}
+
+
 ```
 
 Talk way more about it. 
