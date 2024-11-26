@@ -2,9 +2,8 @@
 title: "My title"
 subtitle: "My subtitle if needed"
 author: 
-  - First author
-  - Another author
-thanks: "Code and data are available at: [https://github.com/RohanAlexander/starter_folder](https://github.com/RohanAlexander/starter_folder)."
+  - Andy Jiang
+thanks: "Code and data are available at: [https://github.com/AndyYanxunJiang/toronto-vehicles-speed-analysis)."
 date: today
 date-format: long
 abstract: "First sentence. Second sentence. Third sentence. Fourth sentence."
@@ -22,6 +21,9 @@ bibliography: references.bib
 library(tidyverse)
 library(ggplot2)
 library(here)
+library(kableExtra)
+library(rstanarm)
+
 
 # Load the cleaned speed data
 data <- read_csv(here::here("data/02-analysis_data/analysis_speed_data.csv"))
@@ -31,6 +33,28 @@ data <- data %>%
   mutate(
     month = as.Date(month)  # Ensure the 'month' column is in Date format
   )
+
+# **Add the data preprocessing steps to create 'filtered_data'**
+
+# Prepare the data used in the model
+analysis_data <- data
+
+# Step 1: Create a new response variable (spd_mean) if not already present
+analysis_data <- analysis_data %>%
+  mutate(
+    spd_mean = rowMeans(select(., starts_with("pct_")), na.rm = TRUE)
+  )
+
+# Step 2: Filter data to remove rows with missing values
+filtered_data <- analysis_data %>%
+  filter(
+    !is.na(spd_mean),  # Ensure the response variable has no missing values
+    !is.na(volume),    # Ensure predictors have no missing values
+    !is.na(pct_05),    # Include pct_05
+    !is.na(pct_50),
+    !is.na(pct_95)
+  )
+
 ```
 
 
@@ -73,9 +97,8 @@ data |>
     col.names = c("Month", "5th Percentile", "Median (50th Percentile)", "95th Percentile", 
                   "Vehicles (30-34 km/h)", "Vehicles (50-54 km/h)", "Vehicles (>100 km/h)", "Total Volume"),
     booktabs = TRUE
-  ) |> 
-  column_spec(1, width = "2.5cm") |> 
-  column_spec(2:8, width = "2.0cm")
+  )
+
 
 ```
 
@@ -95,9 +118,7 @@ data |>
   kable(
     col.names = c("Month", "5th Percentile", "Median (50th Percentile)", "95th Percentile", "Total Volume", "Vehicles (>100 km/h)"),
     booktabs = TRUE
-  ) |> 
-  column_spec(1, width = "2.5cm") |> 
-  column_spec(2:6, width = "2.0cm")
+  )
 
 ```
 
@@ -117,9 +138,7 @@ data |>
   kable(
     col.names = c("Month", "Total Volume", "Vehicles (>100 km/h)", "95th Percentile Speed"),
     booktabs = TRUE
-  ) |> 
-  column_spec(1, width = "2.5cm") |> 
-  column_spec(2:4, width = "2.0cm")
+  )
 
 ```
 
@@ -147,9 +166,7 @@ moderate_speed |>
   kable(
     col.names = c("Month", "Moderate Speed Vehicles", "Total Volume", "Proportion (%)"), 
     booktabs = TRUE
-  ) |> 
-  column_spec(1, width = "2.5cm") |> 
-  column_spec(2:4, width = "2.5cm")
+  )
 
 ```
 
@@ -227,10 +244,6 @@ ggplot(key_percentiles, aes(x = month)) +
 ```
 
 
-```{r}
-
-
-```
 
 Talk way more about it. 
 
@@ -289,7 +302,7 @@ Our results are summarized in @tbl-modelresults.
 library(rstanarm)
 
 first_model <-
-  readRDS(file = here::here("models/first_model.rds"))
+  readRDS(file = here::here("models/speed_model.rds"))
 ```
 
 ```{r}
