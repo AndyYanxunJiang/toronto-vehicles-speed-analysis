@@ -1,9 +1,14 @@
 #### Preamble ####
-# Purpose: Tests the structure and validity of the analysis speed dataset
+# Purpose: Validates the structure and integrity of the analysis speed dataset.
+# This script includes tests to verify dataset dimensions, column contents, 
+# and expected properties of specific variables such as speed percentiles.
 # Author: Andy Jiang
 # Date: 25 November 2024
 # Contact: ayx.jiang@mail.utoronto.ca
-# Pre-requisites: Cleaned data generated and saved
+# Pre-requisites: 
+#   - The cleaned speed dataset should be available at 
+#     "../data/02-analysis_data/analysis_speed_data.csv".
+#   - The `testthat` and `tidyverse` packages should be installed.
 
 #### Workspace setup ####
 library(tidyverse)

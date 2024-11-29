@@ -1,9 +1,13 @@
 #### Preamble ####
-# Purpose: Clean the traffic speed raw data
+# Purpose: Clean the raw traffic speed dataset to prepare it for analysis.
+# This includes removing unnecessary columns and saving the cleaned data.
 # Author: Andy Jiang
 # Date: 23 November 2024
 # Contact: ayx.jiang@mail.utoronto.ca
-# Pre-requisites: Raw data downloaded
+# Pre-requisites: 
+#   - Raw traffic speed data should be downloaded and available at 
+#     "data/01-raw_data/raw_speed_data.csv".
+#   - The `tidyverse` package should be installed.
 
 #### Workspace setup ####
 library(tidyverse)

@@ -1,3 +1,13 @@
+#### Preamble ####
+# Purpose: Fit a Bayesian linear regression model to analyze traffic speed data 
+#          and predict mean speed using key predictors.
+# Author: Andy Jiang
+# Date: 25 November 2024
+# Contact: ayx.jiang@mail.utoronto.ca
+# Pre-requisites: The cleaned traffic speed data must be available in 
+#   - "data/02-analysis_data/analysis_speed_data.csv".
+#   - Necessary R packages (`rstanarm`, `tidyverse`) must be installed.
+
 # Load libraries
 library(rstanarm)
 library(tidyverse)

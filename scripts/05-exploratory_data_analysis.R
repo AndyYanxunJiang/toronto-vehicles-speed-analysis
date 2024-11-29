@@ -1,11 +1,16 @@
 #### Preamble ####
-# Purpose: Perform exploratory data analysis (EDA) on the speed dataset
-# Author: [Your Name]
-# Date: [Current Date]
-# Contact: [Your Email]
-# License: MIT
-# Pre-requisites: Ensure the dataset has been cleaned and saved in the 
-# appropriate location before running this script.
+# Purpose: Perform exploratory data analysis (EDA) on the speed dataset.
+# This script generates summary statistics, visualizations, and insights 
+# about key variables such as speed percentiles and volume. It also includes 
+# correlation analysis and missing value analysis.
+# Author: Andy Jiang
+# Date: 25 November 2024
+# Contact: ayx.jiang@mail.utoronto.ca
+# Pre-requisites:
+#   - The cleaned speed dataset must be available at 
+#     "data/02-analysis_data/analysis_speed_data.csv".
+#   - The GGally library is required for correlation matrix visualization.
+#   - Ensure the "data/02-analysis_data/" directory exists to save the summary tables.
 
 #### Workspace setup ####
 library(tidyverse)

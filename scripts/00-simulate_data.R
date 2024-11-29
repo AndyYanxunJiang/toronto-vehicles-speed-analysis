@@ -1,5 +1,5 @@
 #### Preamble ####
-# Purpose: Simulates vehicle speed data for pre-analysis
+# Purpose: Simulate traffic speed data for pre-analysis and testing purposes.
 # Author: Andy Jiang
 # Date: 23 November 2024
 # Contact: ayx.jiang@mail.utoronto.ca

@@ -1,9 +1,11 @@
 #### Preamble ####
-# Purpose: Downloads and saves the data from Open Data Toronto
+# Purpose: Download and save traffic speed data from Open Data Toronto.
 # Author: Andy Jiang
 # Date: 23 November 2024
 # Contact: ayx.jiang@mail.utoronto.ca
-# Pre-requisites: None
+# Pre-requisites:
+#   - Internet access is required to fetch data from the Open Data Toronto API.
+#   - The `opendatatoronto` and `dplyr` libraries should be installed.
 
 
 #### Workspace setup ####
