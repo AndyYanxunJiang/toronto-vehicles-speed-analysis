@@ -1,15 +1,16 @@
 ---
-title: "My title"
-subtitle: "My subtitle if needed"
+title: "Analyzing Toronto Traffic Speeds: Insights into Patterns and Predictive Modeling"
+subtitle: "Bayesian Linear Regression Reveals Key Determinants of Mean Speed and Post-Pandemic Trends"
 author: 
   - Andy Jiang
 thanks: "Code and data are available at: [https://github.com/AndyYanxunJiang/toronto-vehicles-speed-analysis)."
 date: today
 date-format: long
-abstract: "First sentence. Second sentence. Third sentence. Fourth sentence."
+abstract: "This paper investigates traffic speed data from Toronto collected between 2017 and 2024, focusing on trends in speed percentiles and their relationship to traffic volume. Using a Bayesian linear regression model, we predict mean vehicle speeds based on key predictors such as 5th, 50th, and 95th percentile speeds and total traffic volume. Results highlight significant changes in traffic patterns post-2020, with increased extreme speeds linked to higher traffic volumes. This study provides insights into urban mobility dynamics, offering a basis for traffic management strategies and policy-making."
 format: pdf
 number-sections: true
 bibliography: references.bib
+toc: true
 ---
 
 ```{r}
@@ -23,7 +24,9 @@ library(ggplot2)
 library(here)
 library(kableExtra)
 library(rstanarm)
-
+library(modelsummary)
+library(dplyr)
+library(lubridate)
 
 # Load the cleaned speed data
 data <- read_csv(here::here("data/02-analysis_data/analysis_speed_data.csv"))
@@ -34,18 +37,14 @@ data <- data %>%
     month = as.Date(month)  # Ensure the 'month' column is in Date format
   )
 
-# **Add the data preprocessing steps to create 'filtered_data'**
-
 # Prepare the data used in the model
 analysis_data <- data
 
-# Step 1: Create a new response variable (spd_mean) if not already present
 analysis_data <- analysis_data %>%
   mutate(
     spd_mean = rowMeans(select(., starts_with("pct_")), na.rm = TRUE)
   )
 
-# Step 2: Filter data to remove rows with missing values
 filtered_data <- analysis_data %>%
   filter(
     !is.na(spd_mean),  # Ensure the response variable has no missing values
@@ -55,34 +54,45 @@ filtered_data <- analysis_data %>%
     !is.na(pct_95)
   )
 
+# Read model
+mean_speed_model <- readRDS(file = here::here("models/speed_model.rds"))
 ```
 
 
 # Introduction
+Traffic speed analysis is a critical tool for understanding urban mobility, road safety, and congestion. In metropolitan areas like Toronto, shifting traffic patterns reflect changes in urban infrastructure, population growth, and behavioral adaptations to external events, such as the COVID-19 pandemic. The advent of technologies like radar-equipped speed signs has enabled the collection of detailed traffic data, providing new opportunities to analyze and predict traffic behavior at a granular level.
 
+This paper focuses on traffic speed data collected in Toronto's designated Safety Zones between 2017 and 2024. The dataset comprises monthly summaries of speed percentiles, vehicle counts across specific speed ranges, and total traffic volumes. Notably, the study explores trends in extreme speeds (vehicles exceeding 100 km/h) and evaluates how they have evolved before and after 2020, a period marked by rapid population growth and post-pandemic recovery. These analyses aim to address a key gap: understanding how percentile-based speed measures and traffic volume influence overall mean speeds.
+
+To investigate these relationships, we employ a Bayesian linear regression model to predict mean vehicle speed (`spd_mean`) based on predictors including 5th, 50th, and 95th percentile speeds and traffic volume. Bayesian modeling allows for the incorporation of uncertainty and prior information, making it well-suited for analyzing urban traffic data.
+
+Our findings reveal significant changes in traffic behavior post-2020, including higher extreme speed occurrences at increased traffic volumes, reflecting broader shifts in urban mobility. This study highlights the importance of percentile-based metrics in predicting mean speeds and contributes to ongoing efforts to enhance traffic safety and efficiency. The paper is structured as follows: the data section provides an overview of the dataset and key variables, the model section outlines the Bayesian regression framework, results are discussed in detail, and the discussion section reflects on the implications and limitations of the findings.
 
 
 # Data {#sec-data}
 
+All data analysis was conducted using R [@citeR] with the support of the following packages: tidyverse [@tidyverse], here [@here], ggplot2 [@ggplot2], rstanarm [@rstanarm], kableExtra [@kableExtra], modelsummary [@modelsummary], dplyr [@dplyr], and lubridate [@lubridate]. These packages provided a robust framework for data manipulation, visualization, Bayesian modeling, and reporting, facilitating reproducible and efficient analysis.
+
 ## Overview
+This paper analyzes traffic speed data collected in Toronto over the period 2017–2024. The dataset contains detailed information on percentile speeds, total traffic volume, and counts of vehicles traveling within specific speed ranges. These data provide an opportunity to study the evolution of traffic patterns in Toronto, especially in the context of changing demographics, urbanization, and post-pandemic recovery.
 
-We use the statistical programming language R [@citeR].... Our data [@shelter].... Following @tellingstories, we consider...
-
-Overview text
+The dataset aggregates metrics monthly, offering insights into how traffic behavior has changed over time. This analysis is particularly focused on extreme speeds (vehicles exceeding 100 km/h) and their relationship with total traffic volume, as well as trends in key speed percentiles.
 
 ## Measurement
 	
-Some paragraphs about how we go from a phenomena in the world to an entry in the dataset.
+The dataset analyzed in this paper originates from the Safety Zone Watch Your Speed Program (WYSP), a City of Toronto initiative designed to monitor and influence driver behavior in designated Safety Zones. Data are collected using radar-equipped speed display signs installed on hydro poles or streetlights, which measure the speeds of oncoming vehicles with an accuracy of ±1 km/h and display the speeds on LED screens to encourage compliance with speed limits. These measurements are aggregated into monthly summaries, including key metrics such as percentile speeds (e.g., 5th, 50th, 95th percentiles), vehicle counts within specific speed ranges, and total observed traffic volume. The dataset is curated and published by Open Data Toronto, which ensures its metadata quality, completeness, and accessibility.
 
-## Traffic Speed Dataset
+However, the dataset has certain limitations. The number of vehicles recorded by the speed signs is not equivalent to true traffic volume, as it may exclude vehicles that pass too quickly or fall outside the radar’s range. Additionally, the presence of the signs might influence driver behavior, leading to changes in speed as drivers approach them. Furthermore, the data is limited to Safety Zones where the speed signs have been installed, restricting its spatial coverage. Despite these limitations, the dataset is well-documented, complete, and up-to-date, providing valuable insights into traffic speed patterns across Toronto.
 
+
+## Speed Dataset Preview
 The traffic speed dataset contains information collected from multiple locations and months, detailing percentile speeds, total traffic volume, and counts of vehicles traveling within specific speed ranges. The dataset aggregates these metrics monthly, offering insights into traffic behavior and variations over time.
 
 This dataset includes:
 - Percentile speeds (5th, 10th, ... 95th) representing speed thresholds exceeded by corresponding proportions of vehicles.
 - Traffic volume as the total number of vehicles observed monthly.
 - Speed bins (e.g., 0-4 km/h, 5-9 km/h) for detailed breakdowns of vehicle counts across speed ranges.
-- The table below, @tbl-speed-preview, showcases a preview of the cleaned dataset with selected columns to highlight key features.
+- @tbl-speed-preview showcases a preview of the cleaned dataset with selected columns to highlight key features.
 
 ```{r}
 #| label: tbl-speed-preview
@@ -123,7 +133,7 @@ data |>
 ```
 
 ## Extreme Speeds Dataset
-Vehicles traveling at extreme speeds (over 100 km/h) represent a critical factor in understanding traffic safety and violations. The table below, @tbl-extreme-speeds, highlights the top 5 months with the highest counts of vehicles exceeding 100 km/h. This provides insights into when extreme speeds are most prevalent.
+Vehicles traveling at extreme speeds (over 100 km/h) represent a critical factor in understanding traffic safety and violations. @tbl-extreme-speeds highlights the top 5 months with the highest counts of vehicles exceeding 100 km/h. This provides insights into when extreme speeds are most prevalent.
 
 ```{r}
 #| label: tbl-extreme-speeds
@@ -145,7 +155,7 @@ data |>
 ## Proportion of Vehicles at Moderate Speeds
 Another key insight from this dataset is the proportion of vehicles traveling within a moderate speed range (50–70 km/h). This measure helps understand how typical driving speeds align with safe and efficient traffic flow.
 
-The table below, @tbl-speed-proportion, highlights monthly proportions of vehicles in this speed range.
+@tbl-speed-proportion highlights monthly proportions of vehicles in this speed range.
 
 ```{r}
 #| label: tbl-speed-proportion
@@ -171,16 +181,9 @@ moderate_speed |>
 ```
 
 
+## Extreme Speeds and Traffic Volume
 
-
-
-
-
-
-
-
-
-
+@fig-extreme-speeds-vs-volume illustrates the relationship between extreme speeds (vehicles traveling over 100 km/h) and total traffic volume, categorized by pre-2020 and post-2020 periods. The post-2020 data points show a significant increase in both traffic volume and extreme speed counts, with some months recording over 2,000 vehicles exceeding 100 km/h. This increase may reflect changes in traffic behavior following the COVID-19 pandemic and a rapid population influx into Toronto through immigration. In contrast, pre-2020 data points display lower traffic volumes and fewer extreme speed counts, rarely exceeding 2,000. The fitted lines for each period highlight this divergence, with a steeper slope for post-2020 data, suggesting that higher traffic volumes post-pandemic are associated with a broader range of extreme speed occurrences.
 
 ```{r}
 #| label: fig-extreme-speeds-vs-volume
@@ -212,6 +215,10 @@ ggplot(extreme_vs_volume, aes(x = total_volume, y = extreme_count, color = perio
 
 ```
 
+## Trends in Key Percentiles
+
+@fig-key-percentiles examines trends in key speed percentiles (5th, 50th, and 95th percentiles) from 2017 to 2024, along with the average speed spread (the difference between the 95th and 5th percentiles). The 95th percentile speed demonstrates a clear decline, falling below 50 km/h over the years. Similarly, the 50th percentile speed dropped significantly between 2017 and 2018, stabilizing at around 30 km/h with minor fluctuations. The 5th percentile speed remained steady until mid-2022, when it experienced a noticeable decline to 5 km/h, down from its previous 10 km/h range. Despite these shifts, the speed spread remains relatively consistent, ranging between 35 and 40 km/h, indicating that the overall variability in speeds has not significantly changed. These trends may reflect broader changes in traffic regulations, driver behavior, or urban infrastructure developments in Toronto.
+
 ```{r}
 #| label: fig-key-percentiles
 #| fig-cap: Trends in key speed percentiles (5th, 50th, and 95th) and the spread between the 95th and 5th percentiles over time.
@@ -235,7 +242,7 @@ ggplot(key_percentiles, aes(x = month)) +
   geom_line(aes(y = pct_95, color = "95th Percentile")) +
   geom_line(aes(y = speed_spread, color = "Speed Spread"), linetype = "dashed") +
   labs(
-    x = "Month",
+    x = "Year",
     y = "Speed (km/h)",
     color = "Legend"
   ) +
@@ -243,9 +250,6 @@ ggplot(key_percentiles, aes(x = month)) +
 
 ```
 
-
-
-Talk way more about it. 
 
 ## Predictor variables
 
@@ -257,74 +261,120 @@ Use sub-sub-headings for each outcome variable and feel free to combine a few in
 
 
 
-
-
-
 # Model
 
-The goal of our modelling strategy is twofold. Firstly,...
+The purpose of this paper is to analyze the relationship between traffic volume, speed percentiles, and the mean speed of vehicles observed in Toronto. By utilizing a Bayesian linear regression model, we aim to investigate how various speed percentiles and total traffic volume predict the average vehicle speed (`spd_mean`). This model enables us to quantify the contributions of different speed measures and traffic density to overall traffic dynamics.
 
 Here we briefly describe the Bayesian analysis model used to investigate... Background details and diagnostics are included in [Appendix -@sec-model-details].
 
 ## Model set-up
 
-Define $y_i$ as the number of seconds that the plane remained aloft. Then $\beta_i$ is the wing width and $\gamma_i$ is the wing length, both measured in millimeters.  
+The Bayesian multiple linear regression model used in this paper predicts the mean speed (spd_mean) as a function of total traffic volume (volume) and speed percentiles (pct_05, pct_50, and pct_95). The model is defined as follows:
 
 \begin{align} 
 y_i|\mu_i, \sigma &\sim \mbox{Normal}(\mu_i, \sigma) \\
-\mu_i &= \alpha + \beta_i + \gamma_i\\
-\alpha &\sim \mbox{Normal}(0, 2.5) \\
-\beta &\sim \mbox{Normal}(0, 2.5) \\
-\gamma &\sim \mbox{Normal}(0, 2.5) \\
+\mu_i &= \beta_0 + \beta_1 \cdot \text{volume}_{i} + \beta_2 \cdot \text{pct\_05}_{i} + \beta_3 \cdot \text{pct\_50}_{i} + \beta_4 \cdot \text{pct\_95}_{i} \\
+\beta_0 &\sim \mbox{Normal}(0, 2.5) \\
+\beta_1 &\sim \mbox{Normal}(0, 2.5) \\
+\beta_2 &\sim \mbox{Normal}(0, 2.5) \\
+\beta_3 &\sim \mbox{Normal}(0, 2.5) \\
+\beta_4 &\sim \mbox{Normal}(0, 2.5) \\
 \sigma &\sim \mbox{Exponential}(1)
 \end{align}
 
-We run the model in R [@citeR] using the `rstanarm` package of @rstanarm. We use the default priors from `rstanarm`.
+In the above model:
+
+- $\mu_i$ is the predicted mean speed (spd_mean) for the $i$-th observation given the total traffic volume and speed percentiles.
+- $\beta_0$ is the coefficient for the intercept.
+- $\beta_1$ is the coefficient for the predicted change in the mean speed given a one-unit increase in traffic volume (volume).
+- $\beta_2$ is the coefficient for the predicted change in the mean speed given a one-unit increase in the 5th percentile speed (pct_05).
+- $\beta_3$ is the coefficient for the predicted change in the mean speed given a one-unit increase in the 50th percentile speed (pct_50).
+- $\beta_4$ is the coefficient for the predicted change in the mean speed given a one-unit increase in the 95th percentile speed (pct_95).
+- $\sigma$ is the standard deviation of the residuals, representing unexplained variability in the mean speed.
+
+
+We run the model in R [@citeR] using the `rstanarm` package of [@rstanarm]. We use the default priors from `rstanarm`.
 
 
 ### Model justification
 
-We expect a positive relationship between the size of the wings and time spent aloft. In particular...
+The above model was chosen to investigate the relationship between the average speed (`spd_mean`) of vehicles and key predictors, including total traffic volume (`volume`) and speed percentiles (`pct_05`, `pct_50`, and `pct_95`). These variables were selected because they provide a comprehensive view of traffic patterns and vehicle behavior across different speed thresholds.
 
-We can use maths by including latex between dollar signs, for instance $\theta$.
+The percentiles represent critical thresholds of speed distribution, with the 5th percentile (`pct_05`) capturing the slowest vehicles, the 50th percentile (`pct_50`) representing the median speed, and the 95th percentile (`pct_95`) reflecting the fastest vehicles. These thresholds are expected to influence the average speed significantly. Similarly, total traffic volume (`volume`) accounts for overall road congestion and is anticipated to impact the mean speed inversely, as higher volumes may reduce average speeds due to congestion.
+
+We employ a Bayesian linear regression model implemented using the `rstanarm` package [@rstanarm]. This approach provides a probabilistic framework for parameter estimation and allows the incorporation of prior information. Default priors were used for the regression coefficients (`Normal(0, 2.5)`) and residual standard deviation (`Exponential(1)`), as they are appropriate for general regression problems without overly constraining the estimates.
+
+The linearity assumption is reasonable given the nature of traffic data, where incremental changes in predictors like percentiles and volume are expected to have proportional effects on the mean speed. However, this model does not capture potential nonlinearities or interactions, which could be explored in future work if evidence suggests their relevance.
+
+We hypothesize that:
+
+- Higher 5th, 50th, and 95th percentile speeds will correspond to higher average speeds.
+- Higher traffic volumes will be associated with lower average speeds due to congestion effects.
+This model's simplicity balances interpretability with analytical rigor, making it a suitable choice for understanding traffic patterns and their determinants.
 
 
 # Results
 
-Our results are summarized in @tbl-modelresults.
+## Model Coefficients {#sec-modelcoefficients}
+The results of the Bayesian linear regression model estimating the relationship between mean traffic speed (spd_mean) and its key predictors are summarized in @tbl-modelsummary.
 
 ```{r}
+#| label: tbl-modelsummary
+#| tbl-cap: Model summary of the predicted impact of traffic volume and speed percentiles on mean speed.
 #| echo: false
-#| eval: true
 #| warning: false
 #| message: false
+#| tbl-pos: H
 
-library(rstanarm)
-
-first_model <-
-  readRDS(file = here::here("models/speed_model.rds"))
+modelsummary(mean_speed_model)
 ```
+
+The coefficient estimates reveal that all predictors significantly contribute to the estimation of mean speed (`spd_mean`). The results indicate:
+
+Traffic Volume (`volume`): Higher traffic volumes are associated with slightly lower mean speeds, consistent with the expectation that congestion reduces average traffic speeds.
+5th Percentile Speed (`pct_05`): The lowest observed speeds strongly correlate with mean speed, suggesting a substantial influence of slower-moving vehicles on the overall mean.
+50th Percentile Speed (`pct_50`): The median speed demonstrates the largest positive relationship with mean speed, aligning with its central role in determining the distribution of traffic speeds.
+95th Percentile Speed (`pct_95`): Faster-moving vehicles also positively impact the mean speed, but the effect is less pronounced than that of the median speed.
+These results highlight the combined importance of different speed thresholds and traffic volume in shaping overall traffic behavior.
+
+
+## Actual vs. Predicted Mean Speeds {#sec-actualvspredicted}
+To evaluate the predictive performance of our Bayesian linear regression model, we compare the predicted mean speeds, derived from the model, with the actual observed mean speeds in the dataset. The comparison is visualized in @fig-actualvspredicted.
 
 ```{r}
+#| label: fig-actualvspredicted
+#| fig-cap: Comparison of actual and predicted mean speeds.
 #| echo: false
-#| eval: true
-#| label: tbl-modelresults
-#| tbl-cap: "Explanatory models of flight time based on wing width and wing length"
 #| warning: false
+#| message: false
+#| fig-pos: H
 
-modelsummary::modelsummary(
-  list(
-    "First model" = first_model
-  ),
-  statistic = "mad",
-  fmt = 2
-)
+filtered_data <- filtered_data %>%
+  mutate(
+    predicted = predict(mean_speed_model, newdata = filtered_data)
+  )
+
+ggplot(filtered_data, aes(x = predicted, y = spd_mean)) +
+  geom_point(alpha = 0.5, color = "blue") +
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
+  labs(
+    x = "Predicted Mean Speeds",
+    y = "Actual Mean Speeds"
+  ) +
+  theme_minimal()
+
 ```
 
+In @fig-actualvspredicted, each point represents an observation where the x-axis denotes the predicted mean speed, and the y-axis shows the actual mean speed. The red dashed line represents the ideal case where predictions perfectly match the actual values (i.e., a 45-degree reference line). Observations closely aligning with the dashed line indicate a strong agreement between predicted and actual values.
+
+The model demonstrates strong predictive accuracy, as the majority of points cluster tightly along the dashed line with minimal deviation. This close alignment suggests that the model captures the relationship between the predictors (`pct_05`, `pct_50`, `pct_95`, and `volume`) and the response variable (`spd_mean`) effectively, with minimal systematic bias.
+
+Notably, there are only a few points where slight deviations from the line are visible, mostly at higher mean speed values. This could be attributed to minor outliers or unique conditions not fully explained by the model's predictors. Overall, the results confirm the reliability of the Bayesian model in predicting mean traffic speeds, especially for the typical speed ranges observed in the dataset.
+
+We explore the broader implications of these results, including potential improvements or limitations in the model, in @sec-discussion.
 
 
-
-# Discussion
+# Discussion {#sec-discussion}
 
 ## First discussion point {#sec-first-point}
 
@@ -367,11 +417,11 @@ In @fig-ppcheckandposteriorvsprior-2 we compare the posterior with the prior. Th
 #| fig-cap: "Examining how the model fits, and is affected by, the data"
 #| fig-subcap: ["Posterior prediction check", "Comparing the posterior with the prior"]
 
-pp_check(first_model) +
+pp_check(mean_speed_model) +
   theme_classic() +
   theme(legend.position = "bottom")
 
-posterior_vs_prior(first_model) +
+posterior_vs_prior(mean_speed_model) +
   theme_minimal() +
   scale_color_brewer(palette = "Set1") +
   theme(legend.position = "bottom") +
@@ -394,9 +444,10 @@ posterior_vs_prior(first_model) +
 #| fig-subcap: ["Trace plot", "Rhat plot"]
 #| layout-ncol: 2
 
-plot(first_model, "trace")
+plot(mean_speed_model, "trace")
 
-plot(first_model, "rhat")
+plot(mean_speed_model, "rhat") + 
+  theme_classic()
 ```
 
 
