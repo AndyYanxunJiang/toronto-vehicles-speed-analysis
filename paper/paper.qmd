@@ -3,7 +3,7 @@ title: "Analyzing Toronto Traffic Speeds: Insights into Patterns and Predictive 
 subtitle: "Bayesian Linear Regression Reveals Key Determinants of Mean Speed and Post-Pandemic Trends"
 author: 
   - Andy Jiang
-thanks: "Code and data are available at: [https://github.com/AndyYanxunJiang/toronto-vehicles-speed-analysis)."
+thanks: "Code and data are available at: https://github.com/AndyYanxunJiang/toronto-vehicles-speed-analysis."
 date: today
 date-format: long
 abstract: "This paper investigates traffic speed data from Toronto collected between 2017 and 2024, focusing on trends in speed percentiles and their relationship to traffic volume. Using a Bayesian linear regression model, we predict mean vehicle speeds based on key predictors such as 5th, 50th, and 95th percentile speeds and total traffic volume. Results highlight significant changes in traffic patterns post-2020, with increased extreme speeds linked to higher traffic volumes. This study provides insights into urban mobility dynamics, offering a basis for traffic management strategies and policy-making."
@@ -68,10 +68,12 @@ To investigate these relationships, we employ a Bayesian linear regression model
 
 Our findings reveal significant changes in traffic behavior post-2020, including higher extreme speed occurrences at increased traffic volumes, reflecting broader shifts in urban mobility. This study highlights the importance of percentile-based metrics in predicting mean speeds and contributes to ongoing efforts to enhance traffic safety and efficiency. The paper is structured as follows: the data section provides an overview of the dataset and key variables, the model section outlines the Bayesian regression framework, results are discussed in detail, and the discussion section reflects on the implications and limitations of the findings.
 
+The remainder of this paper is structured as follows. @sec-data discusses the raw data, cleaning process, and key variables of interest, offering visual and tabular representations of the dataset. @sec-model introduces and justifies the Bayesian linear regression model used to analyze the relationship between traffic volume, speed percentiles, and mean vehicle speed. @sec-results presents the findings of the model, highlighting significant trends and correlations within the data. Finally, @sec-discussion explores the broader implications of these results, offering insights into traffic behavior and potential avenues for future research. Additional information regarding data observation methodology is provided in [Appendix -@sec-dataobservation], and further model diagnostics are detailed in [Appendix -@sec-model-details].
+
 
 # Data {#sec-data}
 
-All data analysis was conducted using R [@citeR] with the support of the following packages: tidyverse [@tidyverse], here [@here], ggplot2 [@ggplot2], rstanarm [@rstanarm], kableExtra [@kableExtra], modelsummary [@modelsummary], dplyr [@dplyr], and lubridate [@lubridate]. These packages provided a robust framework for data manipulation, visualization, Bayesian modeling, and reporting, facilitating reproducible and efficient analysis.
+The data used in this paper came from the Open Data Toronto portal through the library opendatatoronto [@citeODT], specifically the Safety Zone Watch Your Speed Program – Monthly Summary [@SpeedDataCite]. All data analysis was conducted using R [@citeR] with the support of the following packages: tidyverse [@tidyverse], here [@here], ggplot2 [@ggplot2], rstanarm [@rstanarm], kableExtra [@kableExtra], modelsummary [@modelsummary], dplyr [@dplyr], and lubridate [@lubridate]. These packages provided a robust framework for data manipulation, visualization, Bayesian modeling, and reporting, facilitating reproducible and efficient analysis.
 
 ## Overview
 This paper analyzes traffic speed data collected in Toronto over the period 2017–2024. The dataset contains detailed information on percentile speeds, total traffic volume, and counts of vehicles traveling within specific speed ranges. These data provide an opportunity to study the evolution of traffic patterns in Toronto, especially in the context of changing demographics, urbanization, and post-pandemic recovery.
@@ -92,20 +94,19 @@ This dataset includes:
 - Percentile speeds (5th, 10th, ... 95th) representing speed thresholds exceeded by corresponding proportions of vehicles.
 - Traffic volume as the total number of vehicles observed monthly.
 - Speed bins (e.g., 0-4 km/h, 5-9 km/h) for detailed breakdowns of vehicle counts across speed ranges.
-- @tbl-speed-preview showcases a preview of the cleaned dataset with selected columns to highlight key features.
+- @tbl-speed-preview showcases a simplified preview of the dataset with selected columns to highlight key features.
 
 ```{r}
 #| label: tbl-speed-preview
-#| tbl-cap: Preview of cleaned traffic speed dataset.
+#| tbl-cap: Preview of analysis traffic speed dataset.
 #| echo: false
 #| tbl-pos: H
 
 data |> 
-  select(month, pct_05, pct_50, pct_95, spd_30, spd_50, spd_100_and_above, volume) |> 
+  select(month, pct_05, pct_95, spd_100_and_above, volume) |> 
   head(10) |> 
   kable(
-    col.names = c("Month", "5th Percentile", "Median (50th Percentile)", "95th Percentile", 
-                  "Vehicles (30-34 km/h)", "Vehicles (50-54 km/h)", "Vehicles (>100 km/h)", "Total Volume"),
+    col.names = c("Month", "5th Percentile", "95th Percentile", "Vehicles (>100 km/h)", "Total Volume"),
     booktabs = TRUE
   )
 
@@ -124,9 +125,9 @@ data |>
 set.seed(304)  # For reproducibility
 data |> 
   sample_n(10) |> 
-  select(month, pct_05, pct_50, pct_95, volume, spd_100_and_above) |> 
+  select(month, pct_05, pct_95, spd_100_and_above, volume) |> 
   kable(
-    col.names = c("Month", "5th Percentile", "Median (50th Percentile)", "95th Percentile", "Total Volume", "Vehicles (>100 km/h)"),
+    col.names = c("Month", "5th Percentile", "95th Percentile", "Vehicles (>100 km/h)", "Total Volume"),
     booktabs = TRUE
   )
 
@@ -242,7 +243,7 @@ ggplot(key_percentiles, aes(x = month)) +
   geom_line(aes(y = pct_95, color = "95th Percentile")) +
   geom_line(aes(y = speed_spread, color = "Speed Spread"), linetype = "dashed") +
   labs(
-    x = "Year",
+    x = "Time",
     y = "Speed (km/h)",
     color = "Legend"
   ) +
@@ -260,8 +261,7 @@ Use sub-sub-headings for each outcome variable and feel free to combine a few in
 
 
 
-
-# Model
+# Model {#sec-model}
 
 The purpose of this paper is to analyze the relationship between traffic volume, speed percentiles, and the mean speed of vehicles observed in Toronto. By utilizing a Bayesian linear regression model, we aim to investigate how various speed percentiles and total traffic volume predict the average vehicle speed (`spd_mean`). This model enables us to quantify the contributions of different speed measures and traffic density to overall traffic dynamics.
 
@@ -269,7 +269,7 @@ Here we briefly describe the Bayesian analysis model used to investigate... Back
 
 ## Model set-up
 
-The Bayesian multiple linear regression model used in this paper predicts the mean speed (spd_mean) as a function of total traffic volume (volume) and speed percentiles (pct_05, pct_50, and pct_95). The model is defined as follows:
+The Bayesian multiple linear regression model used in this paper predicts the mean speed (`spd_mean`) as a function of total traffic volume (`volume`) and speed percentiles (`pct_05`, `pct_50`, and `pct_95`). The model is defined as follows:
 
 \begin{align} 
 y_i|\mu_i, \sigma &\sim \mbox{Normal}(\mu_i, \sigma) \\
@@ -284,12 +284,12 @@ y_i|\mu_i, \sigma &\sim \mbox{Normal}(\mu_i, \sigma) \\
 
 In the above model:
 
-- $\mu_i$ is the predicted mean speed (spd_mean) for the $i$-th observation given the total traffic volume and speed percentiles.
+- $\mu_i$ is the predicted mean speed (`spd_mean`) for the $i$-th observation given the total traffic volume and speed percentiles.
 - $\beta_0$ is the coefficient for the intercept.
-- $\beta_1$ is the coefficient for the predicted change in the mean speed given a one-unit increase in traffic volume (volume).
-- $\beta_2$ is the coefficient for the predicted change in the mean speed given a one-unit increase in the 5th percentile speed (pct_05).
-- $\beta_3$ is the coefficient for the predicted change in the mean speed given a one-unit increase in the 50th percentile speed (pct_50).
-- $\beta_4$ is the coefficient for the predicted change in the mean speed given a one-unit increase in the 95th percentile speed (pct_95).
+- $\beta_1$ is the coefficient for the predicted change in the mean speed given a one-unit increase in traffic volume (`volume`).
+- $\beta_2$ is the coefficient for the predicted change in the mean speed given a one-unit increase in the 5th percentile speed (`pct_05`).
+- $\beta_3$ is the coefficient for the predicted change in the mean speed given a one-unit increase in the 50th percentile speed (`pct_50`).
+- $\beta_4$ is the coefficient for the predicted change in the mean speed given a one-unit increase in the 95th percentile speed (`pct_95`).
 - $\sigma$ is the standard deviation of the residuals, representing unexplained variability in the mean speed.
 
 
@@ -313,14 +313,15 @@ We hypothesize that:
 This model's simplicity balances interpretability with analytical rigor, making it a suitable choice for understanding traffic patterns and their determinants.
 
 
-# Results
+# Results {#sec-results}
 
-## Model Coefficients {#sec-modelcoefficients}
-The results of the Bayesian linear regression model estimating the relationship between mean traffic speed (spd_mean) and its key predictors are summarized in @tbl-modelsummary.
+## Model Coefficients
+The Bayesian linear regression model results, summarized in @tbl-modelsummary, provide insight into the relationship between mean traffic speed (`spd_mean`) and key predictors such as speed percentiles and traffic volume.
 
 ```{r}
 #| label: tbl-modelsummary
 #| tbl-cap: Model summary of the predicted impact of traffic volume and speed percentiles on mean speed.
+#| eval: false
 #| echo: false
 #| warning: false
 #| message: false
@@ -329,16 +330,25 @@ The results of the Bayesian linear regression model estimating the relationship 
 modelsummary(mean_speed_model)
 ```
 
-The coefficient estimates reveal that all predictors significantly contribute to the estimation of mean speed (`spd_mean`). The results indicate:
+The coefficient estimates reveal the following relationships:
 
-Traffic Volume (`volume`): Higher traffic volumes are associated with slightly lower mean speeds, consistent with the expectation that congestion reduces average traffic speeds.
-5th Percentile Speed (`pct_05`): The lowest observed speeds strongly correlate with mean speed, suggesting a substantial influence of slower-moving vehicles on the overall mean.
-50th Percentile Speed (`pct_50`): The median speed demonstrates the largest positive relationship with mean speed, aligning with its central role in determining the distribution of traffic speeds.
-95th Percentile Speed (`pct_95`): Faster-moving vehicles also positively impact the mean speed, but the effect is less pronounced than that of the median speed.
-These results highlight the combined importance of different speed thresholds and traffic volume in shaping overall traffic behavior.
+- Intercept (`-0.881`): This represents the baseline adjustment to the mean speed when all predictors are at their reference levels.
+- Traffic Volume (`0.000`): The coefficient indicates no measurable impact of total traffic volume on mean speed, which is unexpected given traditional congestion dynamics.
+- 5th Percentile Speed (`0.206`): Lower speeds positively influence the mean, showing that slower-moving vehicles contribute moderately to the overall average.
+- 50th Percentile Speed (`0.652`): Median speeds have the largest positive effect on mean speed, emphasizing their central role in shaping the distribution of traffic speeds.
+- 95th Percentile Speed (`0.184`): Higher speeds have a smaller but still positive influence on mean speed, reflecting their contribution to the upper end of the distribution.
+
+The model's performance metrics underscore its robustness:
+
+- R² and Adjusted R² (`0.992`): The model explains 99.2% of the variance in mean speed, indicating excellent fit.
+- Log-Likelihood (`-41414.100`): Represents the model's likelihood given the data.
+- WAIC and LOOIC (`82872.9`): These information criteria indicate model performance, balancing goodness-of-fit and model complexity.
+- RMSE (`0.88`): A low root mean square error confirms the model's predictive accuracy.
+
+These results highlight the dominant role of speed percentiles in determining mean speed while raising questions about the negligible impact of traffic volume. Further exploration into potential interactions or omitted variables could clarify this finding.
 
 
-## Actual vs. Predicted Mean Speeds {#sec-actualvspredicted}
+## Actual vs. Predicted Mean Speeds
 To evaluate the predictive performance of our Bayesian linear regression model, we compare the predicted mean speeds, derived from the model, with the actual observed mean speeds in the dataset. The comparison is visualized in @fig-actualvspredicted.
 
 ```{r}
@@ -376,19 +386,41 @@ We explore the broader implications of these results, including potential improv
 
 # Discussion {#sec-discussion}
 
-## First discussion point {#sec-first-point}
+## Post-pandemic trends and implications for traffic management {#sec-postpandemic}
 
-If my paper were 10 pages, then should be be at least 2.5 pages. The discussion is a chance to show off what you know and what you learnt from all this. 
+The analysis in @fig-extreme-speeds-vs-volume illustrates the significant divergence in traffic patterns between the pre- and post-2020 periods. Post-pandemic traffic volumes are notably higher and are accompanied by an increase in extreme speeds (vehicles traveling over 100 km/h). This trend may reflect the rapid population growth in Toronto, driven by immigration, alongside shifts in urban mobility post-COVID-19.
 
-## Second discussion point
+The steeper slope for post-2020 data in @fig-extreme-speeds-vs-volume suggests that extreme speed counts have become more sensitive to increases in traffic volume. One potential explanation for this is the stress placed on infrastructure as more drivers navigate an increasingly dense urban network. These findings highlight the importance of re-evaluating existing traffic management strategies and prioritizing policies that address the dangers posed by extreme speeds in high-traffic environments.
 
-Please don't use these as sub-heading labels - change them to be what your point actually is.
+Targeted interventions, such as extending safety zones, introducing stricter enforcement of speed limits, or implementing dynamic speed regulation systems, could help mitigate the risks associated with this upward trend in extreme speeds. Additionally, these findings underscore the importance of accounting for macro-level disruptions, like the pandemic, in transportation policy design to better anticipate and address evolving urban mobility challenges.
 
-## Third discussion point
+## Variability in speed percentiles and safety implications {#sec-variability}
 
-## Weaknesses and next steps
+The trends in speed percentiles visualized in @fig-key-percentiles reveal nuanced changes in traffic behavior over time. While the 95th percentile speed has shown a steady decline to below 50 km/h, suggesting progress in limiting higher speeds, the sharp drop in the 5th percentile speed since mid-2022 warrants attention. A decline from approximately 10 km/h to 5 km/h may indicate increased congestion, construction zones, or other road conditions causing slower-moving traffic. This could create a wider speed differential among vehicles, potentially leading to more frequent and severe accidents.
 
-Weaknesses and next steps should also be included.
+The stability of the 50th percentile speed at approximately 30 km/h reflects consistency in typical driving conditions, while the steady spread between the 5th and 95th percentiles (35–40 km/h) points to minimal change in speed variability. However, the importance of addressing the outliers at the extremes cannot be overstated, as they have disproportionate safety implications. This analysis supports the need for targeted measures to minimize variability in speeds, including enhanced road design and enforcement strategies to reduce abrupt accelerations or decelerations.
+
+## Limitations in modeling and data interpretation {#sec-limitations}
+
+While the Bayesian linear regression model employed in this paper provides meaningful insights into the relationship between key predictors and mean vehicle speed, several limitations warrant discussion. As highlighted in @sec-model, the model does not account for potential interactions among predictors, such as the interplay between traffic volume and percentile speeds. For instance, higher traffic volumes may disproportionately affect the 5th percentile speed compared to the 95th percentile, but this relationship remains unexplored due to the model’s linear structure.
+
+Additionally, as noted in @sec-data, the dataset’s reliance on radar-equipped safety zone signs introduces biases related to location and driver behavior. Vehicles may reduce speed upon approaching these signs, potentially underestimating typical speed distributions for the broader road network. Moreover, the dataset aggregates observations monthly, which may obscure short-term fluctuations in traffic patterns.
+
+Future modeling efforts could incorporate interaction terms and hierarchical structures to better capture the complexity of traffic dynamics. Similarly, integrating data from diverse monitoring systems (e.g., highway cameras or GPS datasets) could provide a more comprehensive view of Toronto’s traffic behavior across different contexts.
+
+## Policy recommendations and future directions {#sec-policy}
+
+The findings in this paper provide a valuable foundation for improving traffic safety and efficiency in Toronto. Several actionable recommendations emerge:
+
+- Enhance enforcement and safety measures for extreme speeds: As post-2020 trends demonstrate a growing prevalence of extreme speeds, prioritizing enforcement in high-traffic areas could reduce associated risks. The use of automated speed cameras, stricter penalties for excessive speeding, and expanded safety zone coverage are potential solutions.
+
+- Address speed variability through road design: Consistent median speeds and limited speed spreads are desirable for traffic flow and safety. Urban planning efforts should focus on designing roads that naturally discourage extreme speeds while avoiding conditions that create bottlenecks for slower vehicles.
+
+- Incorporate adaptive traffic policies: The sensitivity of extreme speeds to traffic volume post-2020 underscores the importance of adaptive measures. Dynamic speed limits that adjust based on real-time traffic and weather conditions could help balance safety and mobility.
+
+- Explore complementary data sources: Expanding beyond radar-collected data to include GPS-based datasets, time-of-day analyses, and seasonal effects could provide richer insights. Doing so would allow for a deeper understanding of the factors driving variability in traffic behavior.
+
+These recommendations highlight the broader applicability of the study’s findings to urban centers experiencing rapid population growth and evolving mobility challenges. By addressing the identified gaps and leveraging the insights gained, Toronto and similar cities can move toward safer and more efficient transportation systems.
 
 \newpage
 
@@ -396,57 +428,157 @@ Weaknesses and next steps should also be included.
 
 # Appendix {-}
 
+# Data Observation {#sec-dataobservation}
 
-# Additional data details
+## Idealized Methodology for Traffic Data Collection
+The observational data analyzed in this study stems from the City of Toronto’s Safety Zone Watch Your Speed Program (WYSP), where radar-equipped speed signs monitor and aggregate vehicle speeds. While this data provides valuable insights, it also introduces limitations such as restricted spatial and temporal coverage, potential behavioral biases due to the visibility of speed signs, and an inability to capture all traffic volume accurately. This section proposes an idealized methodology to address these limitations and enhance the robustness of traffic speed data collection.
+
+### Goals of the Idealized Methodology
+
+The idealized methodology aims to:
+
+- Expand Representativeness: Ensure the data reflects traffic patterns across different locations, road types, and times of the day.
+- Minimize Behavioral Biases: Reduce the influence of drivers’ behavior changes caused by the visibility of monitoring devices.
+- Capture Temporal Variability: Account for daily, seasonal, and situational fluctuations in traffic patterns.
+- Improve Accuracy: Ensure that all traffic, including vehicles that might evade radar detection, is measured consistently.
+
+### Proposed Framework
+- Stratified Sampling Approach
+  - To improve spatial representativeness, Toronto can be divided into strata based on geographic regions (e.g., downtown, suburban, and rural areas) and road types (e.g., highways, arterial roads, local streets). The number of monitoring devices deployed in each stratum should be proportional to traffic density and road importance. This stratified approach ensures adequate representation of all areas and road conditions.
+
+- Rotational Monitoring
+  - Rather than using permanent installations, monitoring devices should be deployed on a rotational basis. Devices can be moved periodically across selected sites within each stratum, ensuring broader spatial coverage. Rotation would also reduce drivers' habituation to the presence of speed signs, which might otherwise alter their driving behavior.
+
+- Integration of Covert Monitoring
+  - To minimize behavioral biases, the methodology should integrate covert monitoring techniques. Hidden radar devices or automated cameras can measure vehicle speeds without drivers being aware of their presence, thus capturing more natural driving behavior.
+
+- Temporal Sampling
+  - Data collection should account for temporal variability by monitoring during different times of day (e.g., peak vs. off-peak hours), days of the week (e.g., weekdays vs. weekends), and seasons. This approach ensures a comprehensive understanding of traffic patterns and their fluctuations.
+
+- Technological Enhancements
+  - Advanced technologies such as LiDAR and AI-based sensors can supplement traditional radar devices to increase measurement accuracy. These technologies can detect multiple vehicles simultaneously, reducing blind spots and capturing speeds across a wider field of view.
+
+- Calibration and Standardization
+  - All monitoring devices must undergo regular calibration to maintain consistency and accuracy in speed measurements. A centralized standardization protocol should be implemented to ensure uniformity across all collected data.
+
+### Challenges and Practical Considerations
+Implementing this idealized methodology involves logistical and financial challenges:
+
+- Cost Implications: Deploying advanced devices and rotational monitoring systems requires significant investment in equipment and personnel.
+- Coordination with Stakeholders: Accessing certain road segments for device installation may require coordination with local authorities, businesses, and residents.
+- Data Management: Large-scale data collection introduces challenges related to storage, integration, and processing. Ensuring data integrity and consistency is critical for effective analysis.
+
+Despite these challenges, the proposed framework offers a robust and realistic solution for improving traffic data collection. By addressing the limitations of the existing WYSP dataset, this methodology provides a foundation for more accurate and actionable insights into urban mobility.
+
+## Simulation for Evaluating the Proposed Framework
+Simulations can be an effective way to evaluate the proposed methodology before large-scale implementation. A simulation study could:
+
+- Model Traffic Flow: Use agent-based modeling to simulate traffic flow across Toronto, incorporating variables such as road type, time of day, and vehicle characteristics.
+- Test Monitoring Scenarios: Evaluate the effectiveness of rotational and covert monitoring setups in capturing accurate speed data across different strata.
+Assess Behavioral Impact: Simulate changes in driver behavior due to visible and hidden monitoring devices to quantify potential biases.
+- Optimize Resource Allocation: Simulate various deployment strategies to determine the optimal allocation of monitoring devices for maximum coverage and cost efficiency.
+
+By simulating these scenarios, stakeholders can refine the methodology and address potential challenges before field deployment.
+
+## Strengths and Limitations of Observational Data
+The WYSP dataset offers valuable observational insights into Toronto’s traffic patterns, but it is not without its limitations.
+
+### Strengths
+- Ease of Collection: Radar speed signs provide a non-intrusive method for collecting large amounts of data over extended periods.
+- Focus on Safety Zones: Data collection in designated Safety Zones highlights areas with specific traffic and safety concerns.
+- Detailed Metrics: The dataset includes percentile-based speed metrics (e.g., 5th, 50th, and 95th percentiles), which are critical for analyzing traffic behavior.
+
+### Limitations
+- Limited Spatial Coverage: The dataset only includes areas with installed speed signs, omitting many road segments across Toronto.
+- Behavioral Biases: Visible speed signs may influence drivers to temporarily reduce their speed, resulting in data that may not reflect typical behavior.
+- Temporal Gaps: Data is aggregated monthly, obscuring finer temporal variations such as hourly or daily patterns.
+- Non-Representative Traffic Volume: The count of vehicles measured by speed signs is not equivalent to total traffic volume, as some vehicles may evade detection.
+
+
 
 # Model details {#sec-model-details}
 
 ## Posterior predictive check
 
-In @fig-ppcheckandposteriorvsprior-1 we implement a posterior predictive check. This shows...
-
-In @fig-ppcheckandposteriorvsprior-2 we compare the posterior with the prior. This shows... 
+The posterior predictive check (PPC) evaluates how well the Bayesian model fits the observed data [@tellingstories]. In @fig-ppcheck, the black line represents the observed data density, while the blue lines represent the density of replicated data generated from the posterior predictive distribution. The alignment between these lines indicates the model's ability to reproduce the data. While there is a slight deviation at the peak of the density curve, the overall alignment suggests that the model provides a reasonable fit to the observed data. Minor discrepancies may warrant adjustments in the model specification or inclusion of additional predictors to improve fit.
 
 ```{r}
-#| eval: true
+#| label: fig-ppcheck
+#| fig-cap: "Examining how the model fits the data through a posterior predictive check"
 #| echo: false
+#| fig-pos: H
 #| message: false
 #| warning: false
-#| label: fig-ppcheckandposteriorvsprior
-#| layout-ncol: 2
-#| fig-cap: "Examining how the model fits, and is affected by, the data"
-#| fig-subcap: ["Posterior prediction check", "Comparing the posterior with the prior"]
 
 pp_check(mean_speed_model) +
   theme_classic() +
   theme(legend.position = "bottom")
+
+```
+
+## Comparison of the Posterior and Prior
+@fig-postprior compares the prior and posterior distributions for the model parameters. The posterior (left) is informed by the observed data, while the prior (right) reflects initial assumptions [@tellingstories]. Notably, the posterior for all parameters, except the intercept and sigma, remains centered around zero, showing minimal change from the prior. The sigma parameter has shifted slightly to the right, reflecting a more informed estimate based on the data. The red intercept dot spans the entire horizontal range in the prior, indicating a vague prior assumption. This comparison illustrates that the data provides substantial information for refining parameter estimates.
+
+```{r}
+#| label: fig-postprior
+#| fig-cap: "Comparison of posterior and prior distributions for model parameters"
+#| echo: false
+#| warning: false
+#| fig-pos: H
+#| message: false
 
 posterior_vs_prior(mean_speed_model) +
   theme_minimal() +
   scale_color_brewer(palette = "Set1") +
   theme(legend.position = "bottom") +
   coord_flip()
+
 ```
 
-## Diagnostics
+## Markov Chain Monte Carlo Convergence
 
-@fig-stanareyouokay-1 is a trace plot. It shows... This suggests...
-
-@fig-stanareyouokay-2 is a Rhat plot. It shows... This suggests...
-
+### Trace Plot
+The trace plot in @fig-trace examines the behavior of the MCMC chains for each parameter [@tellingstories]. The chains exhibit stable horizontal fluctuations with no discernible trends, indicating proper mixing and convergence. The patterns across all six parameters are consistent, suggesting that the algorithm has adequately explored the parameter space.
 ```{r}
+#| label: fig-trace
+#| fig-cap: "Trace plot for MCMC convergence assessment"
 #| echo: false
-#| eval: true
 #| message: false
 #| warning: false
-#| label: fig-stanareyouokay
-#| fig-cap: "Checking the convergence of the MCMC algorithm"
-#| fig-subcap: ["Trace plot", "Rhat plot"]
-#| layout-ncol: 2
+#| fig-pos: H
 
 plot(mean_speed_model, "trace")
 
-plot(mean_speed_model, "rhat") + 
+```
+
+
+### Rhat Plot
+The Rhat plot in @fig-rhat evaluates the convergence of the Markov Chain Monte Carlo (MCMC) algorithm. The Rhat values for all parameters hover just above 1.00, indicating acceptable convergence. While `pct_05` displays the longest interval, it still falls within the acceptable range. This diagnostic suggests that the chains for all parameters have reached convergence and that the posterior samples are reliable.
+
+```{r}
+#| label: fig-rhat
+#| fig-cap: "Rhat plot for MCMC convergence assessment"
+#| echo: false
+#| message: false
+#| warning: false
+#| fig-pos: H
+
+plot(mean_speed_model, "rhat") +
+  theme_classic()
+
+```
+
+## Credible Intervals
+The credible intervals for the model coefficients are shown in @fig-credible-intervals. The intercept is negative, suggesting a downward adjustment for baseline mean speed. The `volume` coefficient is centered at 0, indicating little influence on the predicted mean speed. Among the predictors, `pct_50` has the strongest positive effect, with a credible interval between 0.5 and 1.0, while `pct_05` and `pct_95` show moderate positive effects. The residual standard deviation (`sigma`) is near 1.0, reflecting the model's uncertainty in capturing variability.
+```{r}
+#| label: fig-credible-intervals
+#| fig-cap: "95% Credible Intervals for Model Coefficients"
+#| echo: false
+#| warning: false
+#| message: false
+#| fig-pos: H
+
+plot(mean_speed_model) +
   theme_classic()
 ```
 
