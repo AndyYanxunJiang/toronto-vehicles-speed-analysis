@@ -1,6 +1,6 @@
 ---
 title: "Analyzing Toronto Traffic Speeds: Understanding Urban Mobility, Safety, and Speed Dynamics"
-subtitle: "Exploring Traffic Patterns and Relationships Between Speed Percentiles and Volume"
+subtitle: "Examining Traffic Patterns and Relationships Between Speed Percentiles and Volume"
 author: 
   - Andy Jiang
 thanks: "Code and data are available at: https://github.com/AndyYanxunJiang/toronto-vehicles-speed-analysis."
