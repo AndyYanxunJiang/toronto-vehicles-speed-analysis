@@ -1,12 +1,12 @@
 ---
-title: "Analyzing Toronto Traffic Speeds: Insights into Urban Mobility, Safety, and Speed Dynamics"
-subtitle: "Exploring Key Traffic Patterns and Relationships Between Speed Percentiles and Volume"
+title: "Analyzing Toronto Traffic Speeds: Understanding Urban Mobility, Safety, and Speed Dynamics"
+subtitle: "Exploring Traffic Patterns and Relationships Between Speed Percentiles and Volume"
 author: 
   - Andy Jiang
 thanks: "Code and data are available at: https://github.com/AndyYanxunJiang/toronto-vehicles-speed-analysis."
 date: today
 date-format: long
-abstract: "This paper investigates traffic speed data from Toronto collected between 2017 and 2024, focusing on trends in speed percentiles and their relationship to traffic volume. Using a Bayesian linear regression model, we predict mean vehicle speeds based on key predictors such as 5th, 50th, and 95th percentile speeds and total traffic volume. Results highlight significant changes in traffic patterns post-2020, with increased extreme speeds linked to higher traffic volumes. This study provides insights into urban mobility dynamics, offering a basis for traffic management strategies and policy-making."
+abstract: "This paper investigates traffic speed data from Toronto collected between 2017 and 2024, focusing on trends in speed percentiles and their relationship to traffic volume. Using a Bayesian linear regression model, we predict mean vehicle speeds based on key predictors such as 5th, 50th, and 95th percentile speeds and total traffic volume. Results highlight significant changes in traffic patterns post-2020, with increased extreme speeds linked to higher traffic volumes. This study provides a deeper understanding of urban mobility dynamics, supporting traffic management strategies and policy-making."
 format: pdf
 number-sections: true
 bibliography: references.bib
@@ -61,15 +61,15 @@ mean_speed_model <- readRDS(file = here::here("models/speed_model.rds"))
 
 # Introduction
 
-Traffic speed analysis is a critical tool for understanding urban mobility, road safety, and congestion. In metropolitan areas like Toronto, shifting traffic patterns reflect changes in urban infrastructure, population growth, and behavioral adaptations to external events, such as the COVID-19 pandemic. The advent of technologies like radar-equipped speed signs has enabled the collection of detailed traffic data, providing new opportunities to analyze and predict traffic behavior at a granular level.
+Traffic speed analysis is an essential method for understanding urban mobility, road safety, and congestion. In metropolitan areas like Toronto, shifting traffic patterns reflect changes in urban infrastructure, population growth, and behavioral adaptations to external events, such as the COVID-19 pandemic. The advent of technologies like radar-equipped speed signs has enabled the collection of detailed traffic data, providing new opportunities to analyze and predict traffic behavior at a granular level.
 
-This paper focuses on traffic speed data collected in Toronto's designated Safety Zones between 2017 and 2024. The dataset comprises monthly summaries of speed percentiles, vehicle counts across specific speed ranges, and total traffic volumes. Notably, the study explores trends in extreme speeds (vehicles exceeding 100 km/h) and evaluates how they have evolved before and after 2020, a period marked by rapid population growth and post-pandemic recovery. These analyses aim to address a key gap: understanding how percentile-based speed measures and traffic volume influence overall mean speeds.
+This paper focuses on traffic speed data collected in Toronto's designated Safety Zones between 2017 and 2024. The dataset comprises monthly summaries of speed percentiles, vehicle counts across specific speed ranges, and total traffic volumes. Notably, the study examines trends in extreme speeds (vehicles exceeding 100 km/h) and evaluates how they have changed before and after 2020, a period marked by rapid population growth and post-pandemic recovery. These analyses aim to address a key gap: understanding how percentile-based speed measures and traffic volume influence overall mean speeds.
 
 To investigate these relationships, we employ a Bayesian linear regression model to predict mean vehicle speed (`spd_mean`) based on predictors including 5th, 50th, and 95th percentile speeds and traffic volume. Bayesian modeling allows for the incorporation of uncertainty and prior information, making it well-suited for analyzing urban traffic data.
 
 Our findings reveal significant changes in traffic behavior post-2020, including higher extreme speed occurrences at increased traffic volumes, reflecting broader shifts in urban mobility. This study highlights the importance of percentile-based metrics in predicting mean speeds and contributes to ongoing efforts to enhance traffic safety and efficiency. The paper is structured as follows: the data section provides an overview of the dataset and key variables, the model section outlines the Bayesian regression framework, results are discussed in detail, and the discussion section reflects on the implications and limitations of the findings.
 
-The remainder of this paper is structured as follows. @sec-data discusses the raw data, cleaning process, and key variables of interest, offering visual and tabular representations of the dataset. @sec-model introduces and justifies the Bayesian linear regression model used to analyze the relationship between traffic volume, speed percentiles, and mean vehicle speed. @sec-results presents the findings of the model, highlighting significant trends and correlations within the data. Finally, @sec-discussion explores the broader implications of these results, offering insights into traffic behavior and potential avenues for future research. Additional information regarding data observation methodology is provided in [Appendix -@sec-dataobservation], and further model diagnostics are detailed in [Appendix -@sec-model-details].
+The remainder of this paper is structured as follows. @sec-data discusses the raw data, cleaning process, and key variables of interest, offering visual and tabular representations of the dataset. @sec-model introduces and justifies the Bayesian linear regression model used to analyze the relationship between traffic volume, speed percentiles, and mean vehicle speed. @sec-results presents the findings of the model, highlighting significant trends and correlations within the data. Finally, @sec-discussion explores the broader implications of these results, offering understandings of traffic behavior and potential avenues for future research. Additional information regarding data observation methodology is provided in [Appendix -@sec-dataobservation], and further model diagnostics are detailed in [Appendix -@sec-model-details].
 
 
 # Data {#sec-data}
@@ -80,29 +80,30 @@ The data used in this paper came from the Open Data Toronto portal through the l
 
 This paper analyzes traffic speed data collected in Toronto over the period 2017–2024. The dataset contains detailed information on percentile speeds, total traffic volume, and counts of vehicles traveling within specific speed ranges. These data provide an opportunity to study the evolution of traffic patterns in Toronto, especially in the context of changing demographics, urbanization, and post-pandemic recovery.
 
-The dataset aggregates metrics monthly, offering insights into how traffic behavior has changed over time. This analysis is particularly focused on extreme speeds (vehicles exceeding 100 km/h) and their relationship with total traffic volume, as well as trends in key speed percentiles.
+The dataset aggregates metrics monthly, offering understandings of how traffic behavior has changed over time. This analysis is particularly focused on extreme speeds (vehicles exceeding 100 km/h) and their relationship with total traffic volume, as well as trends in key speed percentiles.
 
 ## Measurement
 	
 The dataset analyzed in this paper originates from the Safety Zone Watch Your Speed Program (WYSP), a City of Toronto initiative designed to monitor and influence driver behavior in designated Safety Zones. Data are collected using radar-equipped speed display signs installed on hydro poles or streetlights, which measure the speeds of oncoming vehicles with an accuracy of ±1 km/h and display the speeds on LED screens to encourage compliance with speed limits. These measurements are aggregated into monthly summaries, including key metrics such as percentile speeds (e.g., 5th, 50th, 95th percentiles), vehicle counts within specific speed ranges, and total observed traffic volume. The dataset is curated and published by Open Data Toronto, which ensures its metadata quality, completeness, and accessibility.
 
-However, the dataset has certain limitations. The number of vehicles recorded by the speed signs is not equivalent to true traffic volume, as it may exclude vehicles that pass too quickly or fall outside the radar’s range. Additionally, the presence of the signs might influence driver behavior, leading to changes in speed as drivers approach them. Furthermore, the data is limited to Safety Zones where the speed signs have been installed, restricting its spatial coverage. Despite these limitations, the dataset is well-documented, complete, and up-to-date, providing valuable insights into traffic speed patterns across Toronto.
+However, the dataset has certain limitations. The number of vehicles recorded by the speed signs is not equivalent to true traffic volume, as it may exclude vehicles that pass too quickly or fall outside the radar’s range. Additionally, the presence of the signs might influence driver behavior, leading to changes in speed as drivers approach them. Furthermore, the data is limited to Safety Zones where the speed signs have been installed, restricting its spatial coverage. Despite these limitations, the dataset is well-documented, complete, and up-to-date, providing useful understandings of traffic speed patterns across Toronto.
 
 
 ## Speed Dataset Preview
 
-The traffic speed dataset contains information collected from multiple locations and months, detailing percentile speeds, total traffic volume, and counts of vehicles traveling within specific speed ranges. The dataset aggregates these metrics monthly, offering insights into traffic behavior and variations over time.
+The traffic speed dataset contains information collected from multiple locations and months, detailing percentile speeds, total traffic volume, and counts of vehicles traveling within specific speed ranges. The dataset aggregates these metrics monthly, offering understandings of traffic behavior and variations over time.
 
 This dataset includes:
 
 - Percentile speeds (5th, 10th, ... 95th) representing speed thresholds exceeded by corresponding proportions of vehicles.
 - Traffic volume as the total number of vehicles observed monthly.
 - Speed bins (e.g., 0-4 km/h, 5-9 km/h) for detailed breakdowns of vehicle counts across speed ranges.
-- @tbl-speed-preview showcases a simplified preview of the dataset with selected columns to highlight key features.
+
+@tbl-speed-preview showcases a simplified preview of the dataset with selected columns to highlight key features.
 
 ```{r}
 #| label: tbl-speed-preview
-#| tbl-cap: Preview of analysis traffic speed dataset.
+#| tbl-cap: Simplified preview of analysis traffic speed dataset.
 #| echo: false
 #| tbl-pos: H
 
@@ -119,11 +120,11 @@ data |>
 
 ## Random Sample from the Dataset
 
-@tbl-random-sample provides a random sample of 10 observations, offering an unbiased snapshot of key metrics such as speed percentiles, total traffic volume, and counts of vehicles exceeding 100 km/h. This selection illustrates the dataset's diversity without emphasizing specific patterns.
+@tbl-random-sample provides a simplified random sample of 10 observations, offering an unbiased snapshot of key metrics such as speed percentiles, total traffic volume, and counts of vehicles exceeding 100 km/h. This selection illustrates the dataset's diversity without emphasizing specific patterns.
 
 ```{r}
 #| label: tbl-random-sample
-#| tbl-cap: Random sample of traffic speed dataset.
+#| tbl-cap: Simplified random sample of analysis traffic speed dataset.
 #| echo: false
 #| tbl-pos: H
 
@@ -140,7 +141,7 @@ data |>
 
 ## Extreme Speeds Dataset
 
-Vehicles traveling at extreme speeds (over 100 km/h) represent a critical factor in understanding traffic safety and violations. @tbl-extreme-speeds highlights the top 5 months with the highest counts of vehicles exceeding 100 km/h. This provides insights into when extreme speeds are most prevalent.
+Vehicles traveling at extreme speeds (over 100 km/h) represent a significant factor in understanding traffic safety and violations. @tbl-extreme-speeds highlights the top 5 months with the highest counts of vehicles exceeding 100 km/h. This provides understandings of when extreme speeds are most prevalent.
 
 ```{r}
 #| label: tbl-extreme-speeds
@@ -161,7 +162,7 @@ data |>
 
 ## Proportion of Vehicles at Moderate Speeds
 
-Another key insight from this dataset is the proportion of vehicles traveling within a moderate speed range (50–70 km/h). This measure helps understand how typical driving speeds align with safe and efficient traffic flow. @tbl-speed-proportion highlights monthly proportions of vehicles in this speed range.
+Another perspective from this dataset is the proportion of vehicles traveling within a moderate speed range (50–70 km/h). This measure helps understand how typical driving speeds align with safe and efficient traffic flow. @tbl-speed-proportion highlights monthly proportions of vehicles in this speed range.
 
 ```{r}
 #| label: tbl-speed-proportion
@@ -231,6 +232,7 @@ ggplot(extreme_vs_volume, aes(x = total_volume, y = extreme_count, color = perio
 #| echo: false
 #| warning: false
 #| message: false
+
 # Summarize Key Percentiles and Calculate Speed Spread
 key_percentiles <- data %>%
   group_by(month) %>%
@@ -294,9 +296,9 @@ We run the model in R [@citeR] using the `rstanarm` package [@rstanarm].
 
 ### Model justification
 
-The above model was chosen to investigate the relationship between the average speed (`spd_mean`) of vehicles and key predictors, including total traffic volume (`volume`) and speed percentiles (`pct_05`, `pct_50`, and `pct_95`). These variables were selected because they provide a comprehensive view of traffic patterns and vehicle behavior across different speed thresholds.
+The above model was chosen to investigate the relationship between the average speed (`spd_mean`) of vehicles and key predictors, including total traffic volume (`volume`) and speed percentiles (`pct_05`, `pct_50`, and `pct_95`). These variables were selected because they provide a complete view of traffic patterns and vehicle behavior across different speed thresholds.
 
-The percentiles represent critical thresholds of speed distribution, with the 5th percentile (`pct_05`) capturing the slowest vehicles, the 50th percentile (`pct_50`) representing the median speed, and the 95th percentile (`pct_95`) reflecting the fastest vehicles. These thresholds are expected to influence the average speed significantly. Similarly, total traffic volume (`volume`) accounts for overall road congestion and is anticipated to impact the mean speed inversely, as higher volumes may reduce average speeds due to congestion.
+The percentiles represent significant thresholds of speed distribution, with the 5th percentile (`pct_05`) capturing the slowest vehicles, the 50th percentile (`pct_50`) representing the median speed, and the 95th percentile (`pct_95`) reflecting the fastest vehicles. These thresholds are expected to influence the average speed significantly. Similarly, total traffic volume (`volume`) accounts for overall road congestion and is anticipated to impact the mean speed inversely, as higher volumes may reduce average speeds due to congestion.
 
 We employ a Bayesian linear regression model implemented using the `rstanarm` package [@rstanarm]. This approach provides a probabilistic framework for parameter estimation and allows the incorporation of prior information. Default priors were used for the regression coefficients (`Normal(0, 2.5)`) and residual standard deviation (`Exponential(1)`), as they are appropriate for general regression problems without overly constraining the estimates.
 
@@ -313,7 +315,7 @@ This model's simplicity balances interpretability with analytical rigor, making 
 
 ## Model Coefficients
 
-The Bayesian linear regression model results, summarized in @tbl-modelsummary, provide insight into the relationship between mean traffic speed (`spd_mean`) and key predictors such as speed percentiles and traffic volume.
+The Bayesian linear regression model results, summarized in @tbl-modelsummary, provide understandings of the relationship between mean traffic speed (`spd_mean`) and key predictors such as speed percentiles and traffic volume.
 
 ```{r}
 #| label: tbl-modelsummary
@@ -321,9 +323,9 @@ The Bayesian linear regression model results, summarized in @tbl-modelsummary, p
 #| echo: false
 #| warning: false
 #| message: false
-#| tbl-pos: H
+#| fig-pos: H
 
-modelsummary(mean_speed_model)
+modelsummary(list("Mean Speed Prediction" = mean_speed_model))
 ```
 
 The coefficient estimates reveal the following relationships:
@@ -341,7 +343,7 @@ The model's performance metrics underscore its robustness:
 - WAIC and LOOIC (`82872.9`): These information criteria indicate model performance, balancing goodness-of-fit and model complexity.
 - RMSE (`0.88`): A low root mean square error confirms the model's predictive accuracy.
 
-These results highlight the dominant role of speed percentiles in determining mean speed while raising questions about the negligible impact of traffic volume. Further exploration into potential interactions or omitted variables could clarify this finding.
+These results highlight the dominant role of speed percentiles in determining mean speed while raising questions about the negligible impact of traffic volume. Further examination into potential interactions or omitted variables could clarify this finding.
 
 
 ## Actual vs. Predicted Mean Speeds
@@ -399,11 +401,11 @@ The stability of the 50th percentile speed at approximately 30 km/h reflects con
 
 ## Limitations in modeling and data interpretation
 
-While the Bayesian linear regression model employed in this paper provides meaningful insights into the relationship between key predictors and mean vehicle speed, several limitations warrant discussion. As highlighted in @sec-model, the model does not account for potential interactions among predictors, such as the interplay between traffic volume and percentile speeds. For instance, higher traffic volumes may disproportionately affect the 5th percentile speed compared to the 95th percentile, but this relationship remains unexplored due to the model’s linear structure.
+While the Bayesian linear regression model employed in this paper provides meaningful interpretations of the relationship between key predictors and mean vehicle speed, several limitations warrant discussion. As highlighted in @sec-model, the model does not account for potential interactions among predictors, such as the interplay between traffic volume and percentile speeds. For instance, higher traffic volumes may disproportionately affect the 5th percentile speed compared to the 95th percentile, but this relationship remains unexplored due to the model’s linear structure.
 
 Additionally, as noted in @sec-data, the dataset’s reliance on radar-equipped safety zone signs introduces biases related to location and driver behavior. Vehicles may reduce speed upon approaching these signs, potentially underestimating typical speed distributions for the broader road network. Moreover, the dataset aggregates observations monthly, which may obscure short-term fluctuations in traffic patterns.
 
-Future modeling efforts could incorporate interaction terms and hierarchical structures to better capture the complexity of traffic dynamics. Similarly, integrating data from diverse monitoring systems (e.g., highway cameras or GPS datasets) could provide a more comprehensive view of Toronto’s traffic behavior across different contexts.
+Future modeling efforts could incorporate interaction terms and hierarchical structures to better capture the complexity of traffic dynamics. Similarly, integrating data from diverse monitoring systems (e.g., highway cameras or GPS datasets) could provide a more complete view of Toronto’s traffic behavior across different contexts.
 
 ## Challenges and Opportunities in Traffic Enforcement
 
@@ -411,14 +413,14 @@ Automated enforcement systems present both significant opportunities and challen
 
 In Toronto, while automated speed enforcement (ASE) cameras have successfully reduced speeding, the city's adoption of similar technology for other traffic violations, such as blocking intersections ("blocking the box") or driving in transit lanes, has been limited. This is partly due to legislative constraints at the provincial level, which prevent issuing fines for certain violations if the vehicle owner was not the driver at the time. Additionally, despite the proven efficacy of ASE cameras in reducing vehicle speeds, as noted by the significant decrease in speeding incidents in school zones, the rollout of new cameras has been slow.
 
-These delays underscore broader challenges in traffic enforcement, including bureaucratic hurdles, resource constraints, and reliance on traditional enforcement methods. Moreover, the cultural perspective within traffic policing, which often deprioritizes ticketing for non-criminal violations, exacerbates these issues. However, these challenges also present opportunities for leveraging technology to complement traditional enforcement and create a more comprehensive traffic management framework.
+These delays underscore broader challenges in traffic enforcement, including bureaucratic hurdles, resource constraints, and reliance on traditional enforcement methods. Moreover, the cultural perspective within traffic policing, which often deprioritizes ticketing for non-criminal violations, exacerbates these issues. However, these challenges also present opportunities for leveraging technology to complement traditional enforcement and create a more complete traffic management framework.
 
 
 ## Policy recommendations and future directions
 
-The findings in this study offer a foundation for improving traffic safety and efficiency in Toronto. A central takeaway is the value of automated enforcement in addressing critical challenges, including extreme speeds, variability in traffic patterns, and enforcement gaps. Automated speed enforcement (ASE) cameras have already demonstrated significant success in Toronto, reducing both the prevalence of speeding and overall vehicle speeds in monitored areas. Expanding the use of these cameras and integrating new functionalities, such as detecting transit lane violations or intersection blockages, can further enhance their impact. Learning from other cities like Washington, D.C., and New York, Toronto can adopt similar innovations to target a broader range of traffic offenses [@Elliott_2024].
+The findings in this study offer a foundation for improving traffic safety and efficiency in Toronto. A central takeaway is the value of automated enforcement in addressing significant challenges, including extreme speeds, variability in traffic patterns, and enforcement gaps. Automated speed enforcement (ASE) cameras have already demonstrated significant success in Toronto, reducing both the prevalence of speeding and overall vehicle speeds in monitored areas. Expanding the use of these cameras and integrating new functionalities, such as detecting transit lane violations or intersection blockages, can further enhance their impact. Learning from other cities like Washington, D.C., and New York, Toronto can adopt similar innovations to target a broader range of traffic offenses [@Elliott_2024].
 
-Urban road design remains another critical area for intervention. Consistent median speeds and limited speed variability are essential for maintaining safe and efficient traffic flow. To achieve this, urban planning efforts should focus on designing roads that naturally discourage dangerous speeds, while avoiding features that create bottlenecks or increase risks for vulnerable road users. For instance, implementing physical design elements such as raised crosswalks or lane-narrowing strategies can complement automated enforcement measures.
+Urban road design remains another significant area for intervention. Consistent median speeds and limited speed variability are essential for maintaining safe and efficient traffic flow. To achieve this, urban planning efforts should focus on designing roads that naturally discourage dangerous speeds, while avoiding features that create bottlenecks or increase risks for vulnerable road users. For instance, implementing physical design elements such as raised crosswalks or lane-narrowing strategies can complement automated enforcement measures.
 
 Adaptive traffic policies also hold promise for addressing the dynamic nature of urban mobility. Introducing technologies that adjust speed limits in real time based on traffic conditions, weather, or specific safety concerns could help balance safety with mobility. By integrating ASE devices into such adaptive frameworks, the city can enhance their effectiveness in high-risk or high-traffic areas.
 
@@ -438,7 +440,7 @@ By integrating automated enforcement, adaptive policies, and data-driven design 
 
 ## Idealized Methodology for Traffic Data Collection
 
-The observational data analyzed in this study stems from the City of Toronto’s Safety Zone Watch Your Speed Program (WYSP), where radar-equipped speed signs monitor and aggregate vehicle speeds. While this data provides valuable insights, it also introduces limitations such as restricted spatial and temporal coverage, potential behavioral biases due to the visibility of speed signs, and an inability to capture all traffic volume accurately. This section proposes an idealized methodology to address these limitations and enhance the robustness of traffic speed data collection.
+The observational data analyzed in this study stems from the City of Toronto’s Safety Zone Watch Your Speed Program (WYSP), where radar-equipped speed signs monitor and aggregate vehicle speeds. While this data provides useful understandings, it also introduces limitations such as restricted spatial and temporal coverage, potential behavioral biases due to the visibility of speed signs, and an inability to capture all traffic volume accurately. This section proposes an idealized methodology to address these limitations and enhance the robustness of traffic speed data collection.
 
 ### Goals of the Idealized Methodology
 
@@ -461,10 +463,10 @@ The idealized methodology aims to:
   - To minimize behavioral biases, the methodology should integrate covert monitoring techniques. Hidden radar devices or automated cameras can measure vehicle speeds without drivers being aware of their presence, thus capturing more natural driving behavior.
 
 - Temporal Sampling
-  - Data collection should account for temporal variability by monitoring during different times of day (e.g., peak vs. off-peak hours), days of the week (e.g., weekdays vs. weekends), and seasons. This approach ensures a comprehensive understanding of traffic patterns and their fluctuations.
+  - Data collection should account for temporal variability by monitoring during different times of day (e.g., peak vs. off-peak hours), days of the week (e.g., weekdays vs. weekends), and seasons. This approach ensures a complete understanding of traffic patterns and their fluctuations.
 
 - Technological Enhancements
-  - Advanced technologies such as LiDAR and AI-based sensors can supplement traditional radar devices to increase measurement accuracy. These technologies can detect multiple vehicles simultaneously, reducing blind spots and capturing speeds across a wider field of view.
+  - Technologies such as LiDAR and AI-based sensors can supplement traditional radar devices to increase measurement accuracy. These technologies can detect multiple vehicles simultaneously, reducing blind spots and capturing speeds across a wider field of view.
 
 - Calibration and Standardization
   - All monitoring devices must undergo regular calibration to maintain consistency and accuracy in speed measurements. A centralized standardization protocol should be implemented to ensure uniformity across all collected data.
@@ -473,11 +475,11 @@ The idealized methodology aims to:
 
 Implementing this idealized methodology involves logistical and financial challenges:
 
-- Cost Implications: Deploying advanced devices and rotational monitoring systems requires significant investment in equipment and personnel.
+- Cost Implications: Deploying devices and rotational monitoring systems requires significant investment in equipment and personnel.
 - Coordination with Stakeholders: Accessing certain road segments for device installation may require coordination with local authorities, businesses, and residents.
-- Data Management: Large-scale data collection introduces challenges related to storage, integration, and processing. Ensuring data integrity and consistency is critical for effective analysis.
+- Data Management: Large-scale data collection introduces challenges related to storage, integration, and processing. Ensuring data integrity and consistency is significant for effective analysis.
 
-Despite these challenges, the proposed framework offers a robust and realistic solution for improving traffic data collection. By addressing the limitations of the existing WYSP dataset, this methodology provides a foundation for more accurate and actionable insights into urban mobility.
+Despite these challenges, the proposed framework offers a robust and realistic solution for improving traffic data collection. By addressing the limitations of the existing WYSP dataset, this methodology provides a foundation for more accurate and actionable understandings of urban mobility.
 
 ## Simulation for Evaluating the Proposed Framework
 
@@ -492,7 +494,7 @@ By simulating these scenarios, stakeholders can refine the methodology and addre
 
 ## Automated Speed Enforcement (ASE) Evaluation in Toronto
 
-An evaluation of three years of data from Toronto's Automated Speed Enforcement (ASE) cameras provides valuable insights into the potential of automated systems to influence driver behavior and enhance traffic safety. Conducted by researchers from SickKids Hospital and Toronto Metropolitan University, this study highlights the effectiveness of ASE in reducing speeding across multiple speed zones [@Rodrigues_2023].
+An evaluation of three years of data from Toronto's Automated Speed Enforcement (ASE) cameras provides useful understandings of the potential of automated systems to influence driver behavior and enhance traffic safety. Conducted by researchers from SickKids Hospital and Toronto Metropolitan University, this study highlights the effectiveness of ASE in reducing speeding across multiple speed zones [@Rodrigues_2023].
 
 From January 2020 to December 2022, the City of Toronto installed 50 ASE cameras, rotating them to different locations periodically, and later added 25 more cameras to increase coverage. The study reported the following significant findings:
 
@@ -517,7 +519,7 @@ This data demonstrates ASE's substantial role in curbing excessive speeding and 
 The ASE program also reflects several elements of an idealized data collection methodology:
 
 - Rotational Deployment: Cameras were rotated across locations to broaden coverage and minimize behavioral biases from static monitoring.
-- Comprehensive Data Collection: Despite some limitations imposed by the COVID-19 pandemic, the study captured substantial data during periods of normal activity, enhancing its reliability.
+- Extensive Data Collection: Despite some limitations imposed by the COVID-19 pandemic, the study captured substantial data during periods of normal activity, enhancing its reliability.
 - Focused Interventions: Placement of ASE cameras in high-risk areas, such as school zones, demonstrated a targeted approach to improving road safety.
 
 This case study provides a model for integrating automated enforcement with observational data collection, highlighting its efficacy in reducing risky driving behaviors and promoting safer urban mobility.
@@ -526,13 +528,13 @@ This case study provides a model for integrating automated enforcement with obse
 
 ## Strengths and Limitations of Observational Data
 
-The WYSP dataset offers valuable observational insights into Toronto’s traffic patterns, but it is not without its limitations.
+The WYSP dataset offers useful observational understandings into Toronto’s traffic patterns, but it is not without its limitations.
 
 ### Strengths
 
 - Ease of Collection: Radar speed signs provide a non-intrusive method for collecting large amounts of data over extended periods.
 - Focus on Safety Zones: Data collection in designated Safety Zones highlights areas with specific traffic and safety concerns.
-- Detailed Metrics: The dataset includes percentile-based speed metrics (e.g., 5th, 50th, and 95th percentiles), which are critical for analyzing traffic behavior.
+- Detailed Metrics: The dataset includes percentile-based speed metrics (e.g., 5th, 50th, and 95th percentiles), which are significant for analyzing traffic behavior.
 
 ### Limitations
 
