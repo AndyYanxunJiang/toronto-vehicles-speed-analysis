@@ -1,8 +1,8 @@
-# Analyzing Toronto Traffic Speeds: Insights into Urban Mobility, Safety, and Speed Dynamics
+# Analyzing Toronto Traffic Speeds: Understanding Urban Mobility, Safety, and Speed Dynamics
 
 ## Overview
 
-This paper investigates traffic speed data from Toronto collected between 2017 and 2024, focusing on trends in speed percentiles and their relationship to traffic volume. Using a Bayesian linear regression model, we predict mean vehicle speeds based on key predictors such as 5th, 50th, and 95th percentile speeds and total traffic volume. Results highlight significant changes in traffic patterns post-2020, with increased extreme speeds linked to higher traffic volumes. This study provides insights into urban mobility dynamics, offering a basis for traffic management strategies and policy-making.
+This paper investigates traffic speed data from Toronto collected between 2017 and 2024, focusing on trends in speed percentiles and their relationship to traffic volume. Using a Bayesian linear regression model, we predict mean vehicle speeds based on key predictors such as 5th, 50th, and 95th percentile speeds and total traffic volume. Results highlight significant changes in traffic patterns post-2020, with increased extreme speeds linked to higher traffic volumes. This study provides a deeper understanding of urban mobility dynamics, supporting traffic management strategies and policy-making.
 
 
 ## File Structure
