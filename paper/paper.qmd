@@ -252,14 +252,6 @@ ggplot(key_percentiles, aes(x = month)) +
 ```
 
 
-## Predictor variables
-
-Add graphs, tables and text.
-
-Use sub-sub-headings for each outcome variable and feel free to combine a few into one if they go together naturally.
-
-
-
 
 # Model {#sec-model}
 

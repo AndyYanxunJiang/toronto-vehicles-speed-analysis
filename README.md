@@ -9,15 +9,17 @@ This paper investigates traffic speed data from Toronto collected between 2017 a
 
 The repo is structured as:
 
--   `data/01-raw_data` contains the raw data as obtained from X.
--   `data/02-analysis_data` contains the cleaned dataset that was constructed.
--   `model` contains fitted models. 
--   `other` contains relevant literature, details about LLM chat interactions, and sketches.
+-   `data/00-simulated_data` contains the simulated dataset.
+-   `data/01-raw_data` contains the raw data obtained from Open Data Toronto.
+-   `data/02-analysis_data` contains the cleaned dataset used for analysis and an EDA summary
+-   `model` contains the saved Bayesian linear regression model.
+-   `other/datasheet` contains the datasheet documenting the dataset, including a Quarto source file and a PDF output file.
+-   `other/llm_usage` contains documentation of language model usage.
+-   `other/sketches` contains preliminary sketches and exploratory visuals.
 -   `paper` contains the files used to generate the paper, including the Quarto document and reference bibliography file, as well as the PDF of the paper. 
--   `scripts` contains the R scripts used to simulate, download and clean data.
+-   `scripts` contains R scripts for data simulation, downloading, cleaning, testing, exploratory analysis, and model building.
 
 
 ## Statement on LLM usage
 
-Aspects of the code were written with the help of the auto-complete tool, Codriver. The abstract and introduction were written with the help of ChatHorse and the entire chat history is available in inputs/llms/usage.txt.
-
+ChatGPT, specifically GPT-4o and o1-preview was used to assist in the development of this paper. The LLM was utilized for support across different aspects of the project, such as data cleaning, data testing, data visualization, model building, and writing the paper. The entire chat history can be found in `other/llm_usage/usage.txt`.
