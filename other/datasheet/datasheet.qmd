@@ -15,7 +15,7 @@ bibliography: references.bib
 **Motivation**
 
 1. *For what purpose was the dataset created? Was there a specific task in mind? Was there a specific gap that needed to be filled? Please provide a description.*
-    - The dataset was created to monitor traffic speeds, enforce road safety, and provide insights into traffic behavior in designated Safety Zones in Toronto. It allows for analyzing trends and assessing traffic management strategies.
+    - The dataset was created to monitor traffic speeds, enforce road safety, and provide understandings of traffic behavior in designated Safety Zones in Toronto. It allows for analyzing trends and assessing traffic management strategies.
 2. *Who created the dataset (for example, which team, research group) and on behalf of which entity (for example, company, institution, organization)?*
     - The dataset was created by the City of Toronto as part of the Safety Zone Watch Your Speed Program (WYSP) [@SpeedDataCite].
 3. *Who funded the creation of the dataset? If there is an associated grant, please provide the name of the grantor and the grant name and number.*
